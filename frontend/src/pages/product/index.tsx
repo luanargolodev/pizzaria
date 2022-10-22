@@ -8,9 +8,22 @@ import { canSSRAuth } from '../../utils/canSSRAuth';
 
 import { FiUpload } from 'react-icons/fi';
 
-export default function Product() {
+import { setupAPIClient } from '../../services/api';
+
+type ItemProps = {
+  id: string;
+  name: string;
+}
+
+interface CategoryProps {
+  categoryList: ItemProps[];
+}
+
+export default function Product({categoryList}: CategoryProps) {
   const [avatarUrl, setAvatarUrl] = useState('');
   const [imageAvatar, setImageAvatar] = useState(null);
+  const [categories, setCategories] = useState(categoryList || []);
+  const [categorySelected, setCategorySelected] = useState(0);
 
   function handleFile(e: ChangeEvent<HTMLInputElement>) {
     if(!e.target.files) {
@@ -26,6 +39,10 @@ export default function Product() {
       setImageAvatar(image);
       setAvatarUrl(URL.createObjectURL(e.target.files[0]));
     }
+  }
+
+  function handleChangeCategory(event) {
+    setCategorySelected(event.target.value);
   }
 
   return (
@@ -63,13 +80,14 @@ export default function Product() {
               )}
             </label>
 
-            <select>
-              <option>
-                Bebida
-              </option>
-              <option>
-                Pizzas
-              </option>
+            <select value={categorySelected} onChange={handleChangeCategory}>
+              {categories.map((item, index) => {
+                return (
+                  <option key={item.id} value={index}>
+                    {item.name}
+                  </option>
+                )
+              })}
             </select>
 
             <input
@@ -100,7 +118,12 @@ export default function Product() {
 }
 
 export const getServerSideProps = canSSRAuth(async (ctx) => {
+  const apiClient = setupAPIClient(ctx);
+  const response = await apiClient.get('/category');
+  
   return {
-    props: {}
+    props: {
+      categoryList: response.data
+    }
   }
 })
