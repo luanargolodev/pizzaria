@@ -16,7 +16,9 @@ export function setupAPIClient(ctx = undefined) {
   api.interceptors.response.use(response => {
     return response;
   }, (error: AxiosError) => {
-    if(error.response.status === 401) {
+    console.log(error.response.status)
+
+    if(error.response.status === 401 || error.response.status === 400) {
       if(typeof window !== undefined) {
         signOut();
       } else {
