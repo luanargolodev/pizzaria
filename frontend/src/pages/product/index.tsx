@@ -46,8 +46,8 @@ export default function Product({categoryList}: CategoryProps) {
     }
   }
 
-  function handleChangeCategory(event) {
-    setCategorySelected(event.target.value);
+  function handleChangeCategory(event: ChangeEvent<HTMLSelectElement>) {
+    setCategorySelected(Number(event.target.value));
   }
 
   async function handleRegister(event: FormEvent) {
