@@ -1,4 +1,4 @@
-import React, { useContext } from 'react';
+import React, { useContext, useState } from 'react';
 import {
   View,
   Text,
@@ -10,8 +10,26 @@ import {
 
 import { AuthContext } from '../../contexts/AuthContext';
 
+import { useNavigation } from '@react-navigation/native';
+
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { StackParamsList } from '../../routes/app.routes';
+
 export default function Dashboard() {
+  const navigation = useNavigation<NativeStackNavigationProp<StackParamsList>>();
   const { signOut } = useContext(AuthContext);
+  const [number, setNumber] = useState('');
+
+  async function openOrder() {
+    if(number === '') {
+      return;
+    }
+
+    navigation.navigate('Order', {
+      number: number,
+      order_id: '38277457574375734-45-5-345-54'
+    });
+  }
 
   return (
     <SafeAreaView style={styles.container}>
@@ -22,9 +40,11 @@ export default function Dashboard() {
         placeholderTextColor="#f0f0f0"
         style={styles.input}
         keyboardType="numeric"
+        value={number}
+        onChangeText={setNumber}
       />
 
-      <TouchableOpacity style={styles.button}>
+      <TouchableOpacity style={styles.button} onPress={openOrder}>
         <Text style={styles.buttonText}>Abrir mesa</Text>
       </TouchableOpacity>
     </SafeAreaView>
@@ -53,7 +73,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     textAlign: 'center',
     fontSize: 22,
-    color: '#fff3223'
+    color: '#fff'
   },
   button: {
     width: '90%',
