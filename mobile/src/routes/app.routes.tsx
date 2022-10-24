@@ -11,6 +11,7 @@ function AppRoutes() {
       <Stack.Screen
         name="Dashboard"
         component={Dashboard}
+        options={{headerShown: false}}
       />
     </Stack.Navigator>
   )
