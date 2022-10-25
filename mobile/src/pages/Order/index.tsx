@@ -1,11 +1,12 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   SafeAreaView,
   View,
   Text,
   StyleSheet,
   TouchableOpacity,
-  TextInput
+  TextInput,
+  Modal
 } from 'react-native';
 
 import { useRoute, RouteProp, useNavigation } from '@react-navigation/native';
@@ -13,6 +14,8 @@ import { useRoute, RouteProp, useNavigation } from '@react-navigation/native';
 import { Feather } from '@expo/vector-icons';
 
 import { api } from '../../services/api';
+
+import { ModalPicker } from '../../components/ModalPicker';
 
 type RouteDetailParams = {
   Order: {
@@ -23,9 +26,52 @@ type RouteDetailParams = {
 
 type OrderRouteProps = RouteProp<RouteDetailParams, 'Order'>
 
+export type CategoryProps = {
+  id: string;
+  name: string;
+}
+
+type ProductProps = {
+  id: string;
+  name: string;
+}
+
 export default function Order() {
   const route = useRoute<OrderRouteProps>();
   const navigation = useNavigation();
+  const [category, setCategory] = useState<CategoryProps[] | []>([]);
+  const [categorySelected, setCategorySelected] = useState<CategoryProps | undefined>();
+  const [amount, setAmount] = useState('1');
+  const [modalCategoryVisible, setModalCategoryVisible] = useState(false);
+  const [products, setProducts] = useState<ProductProps[] | []>([]);
+  const [productSelected, setProductSelected] = useState<ProductProps | undefined>();
+  const [modalProductVisible, setModalProductVisible] = useState(false);
+
+  useEffect(() => {
+    async function loadInfo() {
+      const response = await api.get('/category');
+      
+      setCategory(response.data);
+      setCategorySelected(response.data[0]);
+    }
+
+    loadInfo();
+  }, [])
+
+  useEffect(() => {
+    async function loadProducts() {
+      const response = await api.get('/category/product', {
+        params: {
+          category_id: categorySelected?.id
+        }
+      });
+
+      setProducts(response.data);
+      setProductSelected(response.data[0]);
+    }
+
+    loadProducts();
+  }, [categorySelected])
 
   async function handleCloseOrder() {
     try {
@@ -41,6 +87,14 @@ export default function Order() {
     }
   }
 
+  function handleChangeCategory(item: CategoryProps) {
+    setCategorySelected(item);
+  }
+
+  function handleChangeProduct(item: ProductProps) {
+    setProductSelected(item);
+  }
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
@@ -50,13 +104,19 @@ export default function Order() {
         </TouchableOpacity>
       </View>
 
-      <TouchableOpacity style={styles.input}>
-        <Text style={{color: '#fff'}}>Pizzas</Text>
-      </TouchableOpacity>
+      {category.length !== 0 && (
+        <TouchableOpacity style={styles.input} onPress={() => setModalCategoryVisible(true)}>
+          <Text style={{color: '#fff'}}>
+            {categorySelected?.name}
+          </Text>
+        </TouchableOpacity>
+      )}
 
-      <TouchableOpacity style={styles.input}>
-        <Text style={{color: '#fff'}}>Pizza de calabresa</Text>
-      </TouchableOpacity>
+      {products.length !== 0 && (
+        <TouchableOpacity style={styles.input} onPress={() => setModalProductVisible(true)}>
+          <Text style={{color: '#fff'}}>{productSelected?.name}</Text>
+        </TouchableOpacity>
+      )}
 
       <View style={styles.qtdContainer}>
         <Text style={styles.qtdText}>Quantidade</Text>
@@ -67,7 +127,8 @@ export default function Order() {
           }]}
           placeholderTextColor="#f0f0f0"
           keyboardType="numeric"
-          value="1"
+          value={amount}
+          onChangeText={setAmount}
         />
       </View>
 
@@ -80,6 +141,30 @@ export default function Order() {
           <Text style={styles.buttonText}>Avançar</Text>
         </TouchableOpacity>
       </View>
+
+      <Modal
+        transparent={true}
+        visible={modalCategoryVisible}
+        animationType="fade"
+      >
+        <ModalPicker
+          handleCloseModal={() => setModalCategoryVisible(false)}
+          options={category}
+          selectedItem={handleChangeCategory}
+        />
+      </Modal>
+
+      <Modal
+        transparent={true}
+        visible={modalProductVisible}
+        animationType="fade"
+      >
+        <ModalPicker
+          handleCloseModal={() => setModalProductVisible(false)}
+          options={products}
+          selectedItem={handleChangeProduct}
+        />
+      </Modal>
     </SafeAreaView>
   )
 }
